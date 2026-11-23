@@ -283,23 +283,4 @@ Detailed sequence diagrams and dataflow charts are available in [docs/architectu
 
 ---
 
-## 🎓 Technical Interview Defense & Key Design Decisions
 
-### Q1: Why did you implement Two-Stage Retrieval instead of standard vector search?
-> **Answer:** Standard vector search uses bi-encoders that encode queries and passages into separate vectors. While blazingly fast ($O(1)$ to $O(\log N)$ in ChromaDB HNSW), bi-encoders miss token-level interactions. In our tests, vector retrieval placed the most direct answer at Rank 3. Our Cross-Encoder (`ms-marco-MiniLM-L-6-v2`) performed joint query-passage self-attention and promoted it to Rank 1 ($+3.78$ relevance score), resolving the *"Lost in the Middle"* problem.
-
-### Q2: How does RAGGuard AI mathematically detect hallucinations?
-> **Answer:** We built a deterministic token-level Faithfulness metric (`calculate_faithfulness`). It splits the model answer into individual claims, strips boilerplate/citations, and calculates the content-token recall against the retrieved context. Any claim with overlap below $0.35$ is flagged as an unsupported claim / hallucination candidate.
-
-### Q3: How does your Quality Gate stop bad deployments in CI/CD?
-> **Answer:** In `.github/workflows/ci.yml`, the pipeline runs `app.reporting.report_generator`. The Quality Gate evaluates 4 rules:
-> 1. Zero critical security vulnerabilities (zero-tolerance).
-> 2. Minimum Faithfulness $\ge 0.80$.
-> 3. Minimum Precision@3 $\ge 0.50$.
-> 4. Zero metric drops $> 5\%$ vs. our Golden Baseline.
-> If any critical threshold fails, the build exits with an error code and blocks deployment.
-
----
-
-## 📄 License
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
