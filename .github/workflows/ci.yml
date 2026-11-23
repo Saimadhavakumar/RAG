@@ -1,0 +1,43 @@
+name: RAGGuard AI — CI/CD Quality Gate & Security Audit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-evaluate:
+    name: Run Pytest & Enforce Quality Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest Test Suite
+        run: |
+          pytest -v
+
+      - name: Run RAG Evaluation, Red Team Audit & Quality Gate
+        run: |
+          python -m app.reporting.report_generator
+
+      - name: Upload Quality & Security Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ragguard-audit-reports
+          path: reports/
+          retention-days: 14

@@ -1,0 +1,142 @@
+{
+  "timestamp": "2026-11-23T22:02:44.662699",
+  "total_samples": 5,
+  "passed_samples": 3,
+  "failed_samples": 2,
+  "pass_rate_pct": 60.0,
+  "mean_precision_at_k": 0.6,
+  "mean_recall_at_k": 0.6,
+  "mean_reciprocal_rank": 0.6,
+  "mean_ndcg_at_k": 1.2785,
+  "mean_faithfulness": 1.0,
+  "mean_answer_correctness_f1": 0.2371,
+  "mean_context_relevance": 0.5142,
+  "sample_results": [
+    {
+      "sample_id": "DEV-001",
+      "query": "What is the definition of DevOps?",
+      "category": "functional",
+      "is_answerable": true,
+      "generated_answer": "Based on the provided documentation, Definition of DevOps \uf097 DevOps is a collaboration between Development and IT Operations to make software production and Deployment in an automated & repeatable way. \uf097 DevOps helps increase the organization\u2019s speed to deliver software applications and ...\n\n[Source: Devops unit-3.pdf, Page: 2]",
+      "ground_truth_answer": "DevOps is a combination of cultural philosophies, practices, and tools that increases an organization's ability to deliver applications and services at high velocity.",
+      "retrieved_sources": [
+        "Devops unit-3.pdf",
+        "Devops unit-3.pdf",
+        "Devops unit-3.pdf"
+      ],
+      "expected_sources": [
+        "Devops unit-3.pdf"
+      ],
+      "precision_at_k": 1.0,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg_at_k": 2.1309,
+      "context_relevance": 0.8333,
+      "faithfulness": 1.0,
+      "answer_correctness_f1": 0.3548,
+      "unsupported_claims": [],
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "sample_id": "DEV-002",
+      "query": "What is continuous integration and how do developers commit code?",
+      "category": "functional",
+      "is_answerable": true,
+      "generated_answer": "Based on the provided documentation, Life cycle of DevOps 3. Continuous Integration \uf097 This stage is the heart of the entire DevOps life cycle. \uf097 Developers require to commit changes to the source code more frequently. \uf097 Every commit is then verified for early detection of problems if th...\n\n[Source: Devops unit-3.pdf, Page: 23]",
+      "ground_truth_answer": "Continuous Integration is a DevOps phase where developers commit code changes to a shared repository. The code supporting new functionality is continuously integrated with existing code and tested.",
+      "retrieved_sources": [
+        "Devops unit-3.pdf",
+        "Devops unit-3.pdf",
+        "Devops unit-3.pdf"
+      ],
+      "expected_sources": [
+        "Devops unit-3.pdf"
+      ],
+      "precision_at_k": 1.0,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg_at_k": 2.1309,
+      "context_relevance": 0.7,
+      "faithfulness": 1.0,
+      "answer_correctness_f1": 0.3175,
+      "unsupported_claims": [],
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "sample_id": "DEV-003",
+      "query": "What are the main stages in the DevOps life cycle?",
+      "category": "functional",
+      "is_answerable": true,
+      "generated_answer": "Based on the provided documentation, Life cycle of DevOps...\n\n[Source: Devops unit-3.pdf, Page: 10]",
+      "ground_truth_answer": "The DevOps life cycle includes stages such as continuous development, continuous integration, continuous testing, continuous deployment, and continuous monitoring.",
+      "retrieved_sources": [
+        "Devops unit-3.pdf",
+        "Devops unit-3.pdf",
+        "Devops unit-3.pdf"
+      ],
+      "expected_sources": [
+        "Devops unit-3.pdf"
+      ],
+      "precision_at_k": 1.0,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "ndcg_at_k": 2.1309,
+      "context_relevance": 0.3333,
+      "faithfulness": 1.0,
+      "answer_correctness_f1": 0.2667,
+      "unsupported_claims": [],
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "sample_id": "DEV-004",
+      "query": "What is the event horizon of a black hole in astrophysics?",
+      "category": "unanswerable",
+      "is_answerable": false,
+      "generated_answer": "Based on the provided documentation, Software Development Life Cycle  (SDLC) Stage 1:Planning and Requirement Analysis \uf097 Requirement analysis is the most important and fundamental stage in SDLC. \uf097 It is performed by the senior members of the team with inputs from the customer, the sales...\n\n[Source: Devops unit-1 .pdf, Page: 19]",
+      "ground_truth_answer": "I do not have sufficient information in the provided documents to answer this question.",
+      "retrieved_sources": [
+        "Devops unit-1 .pdf",
+        "Devops unit-1 .pdf",
+        "Devops unit-1 .pdf"
+      ],
+      "expected_sources": [],
+      "precision_at_k": 0.0,
+      "recall_at_k": 0.0,
+      "reciprocal_rank": 0.0,
+      "ndcg_at_k": 0.0,
+      "context_relevance": 0.4545,
+      "faithfulness": 1.0,
+      "answer_correctness_f1": 0.1132,
+      "unsupported_claims": [],
+      "passed": false,
+      "failure_reason": "Model hallucinated answer for an out-of-domain unanswerable question"
+    },
+    {
+      "sample_id": "DEV-005",
+      "query": "Explain quantum supremacy and qubit entanglement in quantum computing.",
+      "category": "unanswerable",
+      "is_answerable": false,
+      "generated_answer": "Based on the provided documentation, Importance of Software Engineering...\n\n[Source: Devops unit-1 .pdf, Page: 10]",
+      "ground_truth_answer": "I do not have sufficient information in the provided documents to answer this question.",
+      "retrieved_sources": [
+        "Devops unit-1 .pdf",
+        "Devops unit-1 .pdf",
+        "Devops unit-2.pdf"
+      ],
+      "expected_sources": [],
+      "precision_at_k": 0.0,
+      "recall_at_k": 0.0,
+      "reciprocal_rank": 0.0,
+      "ndcg_at_k": 0.0,
+      "context_relevance": 0.25,
+      "faithfulness": 1.0,
+      "answer_correctness_f1": 0.1333,
+      "unsupported_claims": [],
+      "passed": false,
+      "failure_reason": "Model hallucinated answer for an out-of-domain unanswerable question"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+# Promptfoo Functional & Quality Configuration for RAGGuard AI
+description: "RAGGuard AI Functional & Quality Evaluation Suite"
+
+prompts:
+  - "{{query}}"
+
+providers:
+  - id: "python:promptfoo/provider.py"
+    label: "RAGGuard-Pipeline"
+
+tests:
+  - description: "DEV-001: Continuous Integration Definition & Commit workflow"
+    vars:
+      query: "What is continuous integration and how do developers commit code?"
+    assert:
+      - type: icontains
+        value: "Continuous Integration"
+      - type: contains
+        value: "Source:"
+      - type: contains
+        value: "Page:"
+
+  - description: "DEV-002: DevOps Life Cycle Stages"
+    vars:
+      query: "What are the main stages in the DevOps life cycle?"
+    assert:
+      - type: icontains
+        value: "DevOps"
+      - type: contains
+        value: "Source:"
+
+  - description: "DEV-003: Unanswerable Out-of-Domain Refusal"
+    vars:
+      query: "What is quantum entanglement and qubit teleportation?"
+    assert:
+      - type: icontains
+        value: "not have sufficient information"
