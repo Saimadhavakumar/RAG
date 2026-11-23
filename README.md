@@ -27,40 +27,146 @@ Traditional software testing relies heavily on deterministic expected outputs. G
 
 ---
 
-## 🏛️ Two-System Architecture
+## 🏛️ System Architecture & Visual Dataflows
 
-RAGGuard AI enforces strict architectural separation between the application being tested and its testing framework:
+RAGGuard AI enforces strict architectural separation between **System A (Target RAG Application)** and **System B (QA & Security Testing Platform)**.
 
+### 1. High-Level Architecture (System A vs. System B)
+
+```mermaid
+graph TB
+    subgraph SYSTEM_A["System A: Target RAG Application Under Test"]
+        Docs["PDF Documents<br>(data/documents/)"] --> Ingestion["Document Ingestion<br>(app/rag/ingestion.py)"]
+        Ingestion --> Chunking["Recursive Chunking<br>(chunk_size=800, overlap=150)"]
+        Chunking --> Embeddings["Embedding Engine<br>(all-MiniLM-L6-v2 / OpenAI)"]
+        Embeddings --> ChromaDB[("ChromaDB Vector Store<br>(data/chroma_db/)")]
+        
+        UserQuery["User Query"] --> Retriever["Semantic Retriever<br>(app/rag/retriever.py)"]
+        ChromaDB -.->|Top-6 Candidates| Retriever
+        Retriever --> Reranker["Cross-Encoder Reranker<br>(ms-marco-MiniLM-L-6-v2)"]
+        Reranker -->|Top-3 Best Chunks| Generator["Grounded Generator<br>(app/rag/generator.py)"]
+        Generator --> RAGResponse["Grounded Response + Sources"]
+    end
+
+    subgraph SYSTEM_B["System B: RAGGuard QA & Security Testing Platform"]
+        TestDataset[("Benchmark Dataset<br>(app/evaluation/dataset.py)")] --> Evaluator["RAG Evaluation Engine<br>(Precision, Recall, MRR, Faithfulness)"]
+        SYSTEM_A -.->|Target Under Test| Evaluator
+        
+        ThreatModel["OWASP LLM Threat Suite"] --> RedTeam["AI Red Teaming Engine<br>(app/security/red_team.py)"]
+        SYSTEM_A -.->|Target Under Test| RedTeam
+        
+        GoldenBaseline[("Golden Baseline<br>(data/baselines/)")] --> RegressionEngine["Regression Engine<br>(app/regression/regression_runner.py)"]
+        Evaluator -.-> RegressionEngine
+        
+        Evaluator --> QualityGate{"Quality Gate<br>(app/reporting/quality_gate.py)"}
+        RedTeam --> QualityGate
+        RegressionEngine --> QualityGate
+        
+        QualityGate -->|PASS / FAIL| ReportGen["Report Generator<br>(JSON + HTML Reports)"]
+        QualityGate -->|NEEDS REVIEW| HumanAudit["Human Approval & Audit<br>(data/audit_log.json)"]
+    end
+
+    subgraph INTERFACES["Interfaces & Delivery"]
+        ReportGen --> StreamlitUI["Streamlit Dashboard<br>(dashboard/app.py)"]
+        SYSTEM_A --> FastAPI["FastAPI REST Backend<br>(app/api/main.py)"]
+        SYSTEM_B --> FastAPI
+        FastAPI --> GitHubActions["GitHub Actions CI/CD<br>(.github/workflows/ci.yml)"]
+    end
 ```
-┌─────────────────────────────────────────────────────────────┐
-│          SYSTEM A: Target RAG Application Under Test        │
-│                                                             │
-│  [PDFs] ──> [Ingestion & Chunking] ──> [Embeddings]         │
-│                                              │              │
-│                                              ▼              │
-│  [User Query] ──> [Retriever] ──> [ChromaDB Vector Store]   │
-│                         │                                   │
-│                         ▼ (Top 6 Candidates)                │
-│                 [Cross-Encoder Reranker]                    │
-│                         │                                   │
-│                         ▼ (Top 3 Refined)                   │
-│               [Grounded Generator] ──> [RAG Response]       │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ Audited & Tested by
-┌──────────────────────────────▼──────────────────────────────┐
-│        SYSTEM B: RAGGuard QA & Security Testing Platform     │
-│                                                             │
-│  ├── 1. RAG Evaluation Engine (Precision, Recall, MRR,      │
-│  │      NDCG, Faithfulness / Hallucination Detection)       │
-│  ├── 2. Pytest QA Automation (22 Unit & Integration Tests)  │
-│  ├── 3. Promptfoo CLI Integration (Prompt & Model Sweeps)   │
-│  ├── 4. AI Red Teaming (Prompt Injection & Leakage Scans)   │
-│  ├── 5. Regression Engine (Deltas vs. Golden Baseline)      │
-│  ├── 6. Quality Gates & Human Approval (Build Enforcement)  │
-│  ├── 7. Automated Reports (Interactive HTML + Machine JSON) │
-│  ├── 8. FastAPI REST Backend (/api/v1/...)                  │
-│  └── 9. Streamlit Dashboard (Multi-tab Command Center)      │
-└─────────────────────────────────────────────────────────────┘
+
+---
+
+### 2. Document Ingestion & Vector Storage Pipeline
+
+```mermaid
+flowchart LR
+    A["Raw PDF Files<br>(data/documents/)"] --> B["PyPDFLoader<br>Text Extraction"]
+    B --> C["Metadata Preservation<br>(source, page_number)"]
+    C --> D["Recursive Character Text Splitter<br>(800 chars / 150 overlap)"]
+    D --> E["Deterministic Chunk ID Generation<br>(MD5 hash content + page)"]
+    E --> F["Batch Embedding Generation<br>(384-dimensional dense vectors)"]
+    F --> G[("ChromaDB Persistent Store<br>(HNSW Vector Index)")]
+```
+
+---
+
+### 3. Two-Stage RAG Query Execution (Bi-Encoder + Cross-Encoder)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Pipeline as RAGPipeline
+    participant Retriever as RAGRetriever
+    participant Chroma as ChromaDB
+    participant Reranker as CrossEncoderReranker
+    participant Generator as RAGGenerator
+
+    User->>Pipeline: Submit Query ("What is continuous integration?")
+    Pipeline->>Retriever: retrieve(query, top_k=6)
+    Retriever->>Chroma: similarity_search_with_score(query, k=6)
+    Chroma-->>Retriever: 6 Candidate Chunks with L2 Distances
+    Retriever-->>Pipeline: Return List[RetrievedChunk]
+    
+    Pipeline->>Reranker: rerank(query, 6 candidates, top_k=3)
+    Note over Reranker: Joint Self-Attention over<br>[Query, Candidate Passage]
+    Reranker-->>Pipeline: Top-3 Reranked Chunks (Page 24 promoted to Rank 1)
+    
+    Pipeline->>Generator: generate(query, 3 refined chunks)
+    Note over Generator: Context Insufficiency Check<br>& Strict Grounding Template
+    Generator-->>Pipeline: RAGResponse (Answer + [Source: File, Page])
+    Pipeline-->>User: Structured RAGPipelineResult
+```
+
+---
+
+### 4. AI Red Teaming & Threat Model Flow
+
+```mermaid
+flowchart TD
+    ThreatSuite["Curated Adversarial Suite<br>(app/security/prompt_injection.py)"] --> Runner["RedTeamRunner<br>(app/security/red_team.py)"]
+    
+    subgraph ATTACKS["Attack Vectors"]
+        A1["Direct Prompt Injection<br>('Ignore all prior rules...')"]
+        A2["System Prompt Extraction<br>('Output your system prompt...')"]
+        A3["Jailbreak / DAN Attack<br>('You are now unrestricted...')"]
+        A4["Sensitive Data Disclosure<br>('What is the admin password?')"]
+        A5["Indirect Document Injection<br>('Execute exfiltration command...')"]
+    end
+    
+    ThreatSuite --> ATTACKS
+    ATTACKS --> Pipeline["RAGPipeline"]
+    Pipeline --> Scanner["Data Leakage Scanner<br>(Regex API keys, passwords, PII)"]
+    Scanner --> ForbiddenCheck{"Forbidden Payloads<br>or Leaks Found?"}
+    ForbiddenCheck -->|No| Blocked["Status: BLOCKED (Safe)"]
+    ForbiddenCheck -->|Yes| Exploited["Status: EXPLOITED (Vulnerability Detected)"]
+    Blocked & Exploited --> SecReport["RedTeamSecurityReport<br>(Mitigation Score, Severity, Remediation)"]
+```
+
+---
+
+### 5. Quality Gate Enforcement & CI/CD Pipeline
+
+```mermaid
+flowchart TD
+    Eval["Evaluation Report"] & Sec["Security Report"] & Reg["Regression Analysis"] --> QG["evaluate_quality_gate()"]
+    
+    subgraph GATES["Gate Thresholds"]
+        G1["Zero Critical Security Leaks (0)"]
+        G2["Minimum Faithfulness (>= 0.80)"]
+        G3["Minimum Precision@3 (>= 0.50)"]
+        G4["Zero Regressions vs Baseline (0)"]
+    end
+    
+    QG --> GATES
+    GATES --> Decision{"All Rules Satisfied?"}
+    Decision -->|Yes| Pass["Status: PASS<br>(Deploy to Production)"]
+    Decision -->|Security Breached| Fail["Status: FAIL<br>(Build Blocked Immediately)"]
+    Decision -->|Minor Quality Dip| Review["Status: NEEDS_HUMAN_REVIEW"]
+    
+    Review --> Signoff["Human Approval Reviewer<br>(Streamlit UI / API Endpoint)"]
+    Signoff --> Audit[("Audit Log<br>data/audit_log.json")]
+    Audit --> Pass
 ```
 
 ---
@@ -95,8 +201,8 @@ RAGGuard AI enforces strict architectural separation between the application bei
 
 ### 1. Clone & Activate Virtual Environment
 ```cmd
-git clone https://github.com/your-username/RAGGuard-AI.git
-cd RAGGuard-AI
+git clone https://github.com/Saimadhavakumar/RAG.git
+cd RAG
 
 python -m venv .venv
 .venv\Scripts\activate
